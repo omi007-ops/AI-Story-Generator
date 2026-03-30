@@ -28,11 +28,17 @@ This notebook demonstrates a complete **Generative AI pipeline** that:
 | Export | Structured `.txt` report |
 
 ---
+
 ## 📦 Step 1: Install & Import Dependencies
+
+```python
 # Install required libraries
 !pip install google-generativeai textblob matplotlib wordcloud Pillow requests --quiet
 !python -m textblob.download_corpora --quiet 2>/dev/null || True
 print("✅ All packages installed successfully!")
+```
+
+```python
 import google.generativeai as genai
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -47,12 +53,18 @@ from collections import Counter
 
 print("✅ Imports successful!")
 print(f"📅 Session started: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
+```
+
+---
+
 ## 🔑 Step 2: Configure the Gemini API
 
 > **Get your free API key at:** [aistudio.google.com](https://aistudio.google.com)  
 > **Recommended:** Store your key as an environment variable named `GEMINI_API_KEY` instead of pasting it directly.
 
 **In Google Colab:** Go to `Secrets` (🔑 icon in left sidebar) → Add `GEMINI_API_KEY` → enable notebook access.
+
+```python
 # ─── Configuration ────────────────────────────────────────────────────────────
 # Option A: Read from environment variable (recommended — safe for sharing)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -69,10 +81,16 @@ model = genai.GenerativeModel("gemini-2.5-flash")
 
 print("✅ Gemini API configured!")
 print(f"🤖 Model: gemini-2.5-flash (fast, powerful, free tier available)")
+```
+
+---
+
 ## 🎨 Step 3: Define Story Configuration
 
 Customize the **genre**, **theme**, **protagonist**, **tone**, and **length** of your story.  
 All parameters are passed into a structured prompt in the next step.
+
+```python
 # ─── Story Configuration ──────────────────────────────────────────────────────
 
 STORY_CONFIG = {
@@ -93,6 +111,10 @@ print("─" * 40)
 for key, val in STORY_CONFIG.items():
     print(f"  {key.upper():<14}: {val}")
 print(f"  {'TARGET WORDS':<14}: ~{target_words}")
+```
+
+---
+
 ## ✍️ Step 4: Prompt Engineering & Story Generation
 
 We use **structured prompt engineering** to guide the LLM toward high-quality, stylistically consistent output.  
@@ -101,6 +123,8 @@ Key techniques used:
 - Explicit story specs to reduce hallucination and drift
 - Numbered requirements to enforce narrative structure
 - Format instructions for clean title parsing
+
+```python
 def build_prompt(config: dict, word_count: int) -> str:
     """
     Constructs a detailed, structured prompt for the LLM.
@@ -177,7 +201,13 @@ def generate_story(config: dict) -> dict:
 
 
 print("✅ Story generation functions ready!")
+```
+
+---
+
 ## 🚀 Step 5: Generate & Display the Story
+
+```python
 # ─── Generate the Story ────────────────────────────────────────────────────────
 story = generate_story(STORY_CONFIG)
 
@@ -198,12 +228,18 @@ if story:
     print(f"  ✨ Genre: {story['genre']} | Words: {story['word_count']}")
 else:
     print("❌ Failed to generate story. Please check your API key or connection.")
+```
+
+---
+
 ## 📊 Step 6: Sentiment Analysis
 
 We use **TextBlob** to perform sentence-level NLP sentiment analysis on the generated story.  
 Each sentence is scored on:
 - **Polarity** — ranges from `-1` (very negative) to `+1` (very positive)
 - **Subjectivity** — ranges from `0` (factual) to `1` (opinionated/emotional)
+
+```python
 def analyze_story_sentiment(story: dict) -> dict:
     """Performs sentence-level sentiment analysis using TextBlob."""
     blob = TextBlob(story["body"])
@@ -257,12 +293,18 @@ for s in analysis['sentences'][:5]:
     print(f"  [{s['label']}] polarity={s['polarity']}")
     print(f"    \"{s['sentence']}\"")
     print()
+```
+
+---
+
 ## 📈 Step 7: Visualize Sentiment — Emotional Arc & Distribution
 
 Three charts are produced:
 1. **Emotional Arc** — bar chart of polarity per sentence (shows how emotion evolves through the story)
 2. **Sentiment Donut** — proportion of positive / negative / neutral sentences
 3. **Polarity vs Subjectivity Scatter** — shows where sentences cluster (objective-positive, subjective-negative, etc.)
+
+```python
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 fig.patch.set_facecolor('#0f0f1a')
 
@@ -352,10 +394,16 @@ plt.savefig("story_analysis.png", dpi=150, bbox_inches='tight',
             facecolor='#0f0f1a', transparent=False)
 plt.show()
 print("✅ Chart saved as 'story_analysis.png'")
+```
+
+---
+
 ## 🔁 Step 8: Multi-Genre Batch Generation & Comparison
 
 Generate stories in **3 different genres** at once and compare their sentiment profiles.  
 This demonstrates how different genres produce distinct **emotional signatures** — Thrillers skew negative, Romances skew positive, and Sci-Fi tends to be intellectually neutral.
+
+```python
 def generate_genre_comparison() -> dict:
     """Generate short stories in 3 genres and compare their sentiment profiles."""
     genres = [
@@ -406,6 +454,9 @@ print("─" * 60)
 for genre, data in genre_results.items():
     title_short = data['title'][:33] + '...' if len(data['title']) > 33 else data['title']
     print(f"{genre:<12} {title_short:<35} {data['avg_polarity']:>10} {data['word_count']:>7}")
+```
+
+```python
 # Visualize genre sentiment comparison
 if genre_results:
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
@@ -450,9 +501,15 @@ if genre_results:
     plt.savefig("genre_comparison.png", dpi=150, bbox_inches='tight', facecolor='#0f0f1a')
     plt.show()
     print("✅ Genre comparison chart saved as 'genre_comparison.png'")
+```
+
+---
+
 ## 💾 Step 9: Export Story & Analysis Report
 
 Saves a formatted `.txt` file containing the full story text and the sentiment analysis summary.
+
+```python
 def export_story(story: dict, analysis: dict) -> str:
     """Saves the story and its analysis report to a formatted .txt file."""
     filename  = f"{story['title'].replace(' ', '_').replace('/', '-')[:40]}.txt"
@@ -500,7 +557,10 @@ print(f"\n🎉 Project complete! Files generated:")
 print(f"   📄 {exported_file}")
 print(f"   📊 story_analysis.png")
 print(f"   📊 genre_comparison.png")
+```
+
 ---
+
 ## 🏆 Project Summary
 
 | Feature | Technology Used |
